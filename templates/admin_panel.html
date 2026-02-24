@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - DeepFake Complaints</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #001f3f, #003366, #00509e);
+            min-height:100vh;
+            color:white;
+            font-family:'Segoe UI',sans-serif;
+            padding-top:30px;
+        }
+        .glass {
+            width:900px;
+            background:rgba(255,255,255,0.15);
+            backdrop-filter:blur(8px);
+            border-radius:12px;
+            padding:25px;
+            margin:auto;
+            box-shadow:0 6px 20px rgba(0,0,0,0.2);
+        }
+        .btn-sm {
+            font-size: 13px;
+            padding:6px 10px;
+            font-weight:600;
+        }
+        .status-badge {
+            padding:4px 10px;
+            border-radius:6px;
+            font-weight:bold;
+        }
+        .pending { background:orange; color:black; }
+        .resolved { background:#00ff99; color:black; }
+        img,video {
+            max-width:120px;
+            border-radius:6px;
+            border:1px solid rgba(255,255,255,0.3);
+            cursor:pointer;
+        }
+        table { color:white; }
+
+        /* Popup Modal Style */
+        /* Popup Modal Style */
+.modal-viewer {
+    display:none;
+    position:fixed;
+    top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.9);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+    padding:20px;
+}
+
+.modal-content-box {
+    width:95%;
+    height:95%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+    border-radius:10px;
+}
+
+.modal-content-box img, .modal-content-box video {
+    width:auto;
+    height:auto;
+    max-width:100%;
+    max-height:100%;
+    border-radius:8px;
+}
+
+.close-btn {
+    position:absolute;
+    top:20px; 
+    right:20px;
+    background:red;
+    color:white;
+    width:40px;height:40px;
+    border-radius:50%;
+    text-align:center;
+    line-height:40px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:20px;
+}
+    </style>
+
+</head>
+<body>
+
+<div class="glass">
+    <h2 class="text-center mb-3">Admin Dashboard</h2>
+    <p class="text-center">Manage DeepFake Complaints filed by users</p>
+
+    {% if complaints|length == 0 %}
+        <h5 class="text-center mt-4">No Complaints Found</h5>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table text-white align-middle">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>Description</th>
+                <th>Proof</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in complaints %}
+            <tr>
+                <td>{{ c.name }}</td>
+                <td>{{ c.mobile }}</td>
+                <td style="max-width:200px;">{{ c.description }}</td>
+
+                <td>
+                    {% if c.image %}
+                        {% if ".mp4" in c.image or ".avi" in c.image or ".mkv" in c.image %}
+                            <video src="/uploads/{{ c.image }}" onclick="openModal('/uploads/{{ c.image }}','video')" muted></video>
+                        {% else %}
+                            <img src="/uploads/{{ c.image }}" onclick="openModal('/uploads/{{ c.image }}','image')">
+                        {% endif %}
+                    {% else %}
+                        No File
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if c.status == 'Resolved' %}
+                        <span class="status-badge resolved">Resolved</span>
+                    {% else %}
+                        <span class="status-badge pending">Pending</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if c.status != 'Resolved' %}
+                        <a href="/resolve/{{ c.id }}" class="btn btn-success btn-sm mb-1">Resolve</a>
+                    {% endif %}
+                    <a href="/delete/{{ c.id }}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-3">
+        <a href="/" class="btn btn-light btn-sm">Back to Detection</a>
+        <a href="/logout" class="btn btn-warning btn-sm">Logout</a>
+    </div>
+
+</div>
+
+<!-- POPUP MODAL -->
+<div id="viewerModal" class="modal-viewer">
+    <div class="modal-content-box">
+        <span class="close-btn" onclick="closeModal()">X</span>
+        <img id="modalImg" style="display:none;">
+        <video id="modalVideo" controls style="display:none;"></video>
+    </div>
+</div>
+
+<script>
+function openModal(fileUrl, type) {
+    const modal = document.getElementById('viewerModal');
+    const img = document.getElementById('modalImg');
+    const vid = document.getElementById('modalVideo');
+
+    if(type === "image") {
+        img.src = fileUrl;
+        img.style.display = "block";
+        vid.style.display = "none";
+    } else {
+        vid.src = fileUrl;
+        vid.style.display = "block";
+        img.style.display = "none";
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeModal() {
+    const modal = document.getElementById('viewerModal');
+    const vid = document.getElementById('modalVideo');
+    modal.style.display = "none";
+    vid.pause();
+}
+</script>
+
+</body>
+</html>
