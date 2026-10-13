@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Scan History | Ai Based Synthetic Media Detection System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+        <div>
+            <div class="forensic-header-tag"><i class="bi bi-clock-history me-1"></i> VERIFICATION AUDIT TRAIL</div>
+            <h2 class="fw-bold mb-0">Detection & Scan History</h2>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <a href="{{ url_for('home') }}" class="btn btn-sm btn-forensic-primary">
+                <i class="bi bi-plus-lg me-1"></i> New Forensic Scan
+            </a>
+        </div>
+    </div>
+
+    <div class="forensic-card p-0 overflow-hidden">
+        {% if scans and scans|length > 0 %}
+        <div class="table-responsive">
+            <table class="forensic-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Thumbnail</th>
+                        <th>Case Reference</th>
+                        <th>Original Media</th>
+                        <th>Type</th>
+                        <th>Verdict</th>
+                        <th>Confidence</th>
+                        <th>Scan Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in scans %}
+                    {% set is_fake = "Fake" in s.verdict or "Deepfake" in s.verdict %}
+                    <tr>
+                        <!-- Thumbnail -->
+                        <td>
+                            <div style="width: 52px; height: 52px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-subtle); background: #000;">
+                                {% if s.face_crop_path %}
+                                    <img src="/uploads/{{ s.face_crop_path }}" style="width: 100%; height: 100%; object-fit: cover;" alt="Face ROI">
+                                {% elif s.heatmap_path %}
+                                    <img src="/uploads/{{ s.heatmap_path }}" style="width: 100%; height: 100%; object-fit: cover;" alt="Heatmap">
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted small">
+                                        <i class="bi bi-file-earmark"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Case ID -->
+                        <td>
+                            <a href="{{ url_for('view_result', scan_id=s.id) }}" class="fw-bold text-info text-decoration-none font-monospace">
+                                SMDS-DF-{{ '%05d' % s.id }}
+                            </a>
+                        </td>
+
+                        <!-- Original Name -->
+                        <td>
+                            <span class="text-light small font-monospace" style="max-width: 180px; display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                {{ s.original_name }}
+                            </span>
+                        </td>
+
+                        <!-- Media Type -->
+                        <td>
+                            <span class="badge bg-dark border border-secondary text-secondary small">
+                                <i class="bi bi-{{ 'camera-video' if s.media_type == 'video' else 'image' }} me-1"></i>
+                                {{ s.media_type|upper }}
+                            </span>
+                        </td>
+
+                        <!-- Verdict -->
+                        <td>
+                            <span class="badge-verdict {{ 'badge-fake' if is_fake else 'badge-real' }}" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                                {{ s.verdict }}
+                            </span>
+                        </td>
+
+                        <!-- Confidence -->
+                        <td>
+                            <span class="font-monospace fw-bold {{ 'text-danger' if is_fake else 'text-success' }}">
+                                {{ s.confidence }}%
+                            </span>
+                        </td>
+
+                        <!-- Date -->
+                        <td class="text-secondary small font-monospace">
+                            {{ s.created_at }}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-1">
+                                <a href="{{ url_for('view_result', scan_id=s.id) }}" class="btn btn-sm btn-forensic-outline" title="View Detailed Dossier">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('download_report', scan_id=s.id) }}" class="btn btn-sm btn-forensic-outline text-info" title="Download Official PDF">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </a>
+                                <form action="{{ url_for('delete_user_scan', scan_id=s.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently remove this forensic scan record?');">
+                                    <button type="submit" class="btn btn-sm btn-forensic-outline text-danger border-danger-subtle" title="Delete Record">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="text-secondary fs-1 mb-2"><i class="bi bi-folder2-open"></i></div>
+            <h5 class="fw-bold">No Forensic Scans Recorded Yet</h5>
+            <p class="text-muted small mb-3">Upload media files from the Scan Center to generate forensic verification records.</p>
+            <a href="{{ url_for('home') }}" class="btn btn-sm btn-forensic-primary">
+                <i class="bi bi-search me-1"></i> Start First Scan
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

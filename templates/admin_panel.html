@@ -1,199 +1,399 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - DeepFake Complaints</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% extends "base.html" %}
+
+{% block title %}Admin Control Center | Ai Based Synthetic Media Detection System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5">
     
-    <style>
-        body {
-            background: linear-gradient(135deg, #001f3f, #003366, #00509e);
-            min-height:100vh;
-            color:white;
-            font-family:'Segoe UI',sans-serif;
-            padding-top:30px;
-        }
-        .glass {
-            width:900px;
-            background:rgba(255,255,255,0.15);
-            backdrop-filter:blur(8px);
-            border-radius:12px;
-            padding:25px;
-            margin:auto;
-            box-shadow:0 6px 20px rgba(0,0,0,0.2);
-        }
-        .btn-sm {
-            font-size: 13px;
-            padding:6px 10px;
-            font-weight:600;
-        }
-        .status-badge {
-            padding:4px 10px;
-            border-radius:6px;
-            font-weight:bold;
-        }
-        .pending { background:orange; color:black; }
-        .resolved { background:#00ff99; color:black; }
-        img,video {
-            max-width:120px;
-            border-radius:6px;
-            border:1px solid rgba(255,255,255,0.3);
-            cursor:pointer;
-        }
-        table { color:white; }
-
-        /* Popup Modal Style */
-        /* Popup Modal Style */
-.modal-viewer {
-    display:none;
-    position:fixed;
-    top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.9);
-    justify-content:center;
-    align-items:center;
-    z-index:9999;
-    padding:20px;
-}
-
-.modal-content-box {
-    width:95%;
-    height:95%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    position:relative;
-    border-radius:10px;
-}
-
-.modal-content-box img, .modal-content-box video {
-    width:auto;
-    height:auto;
-    max-width:100%;
-    max-height:100%;
-    border-radius:8px;
-}
-
-.close-btn {
-    position:absolute;
-    top:20px; 
-    right:20px;
-    background:red;
-    color:white;
-    width:40px;height:40px;
-    border-radius:50%;
-    text-align:center;
-    line-height:40px;
-    cursor:pointer;
-    font-weight:bold;
-    font-size:20px;
-}
-    </style>
-
-</head>
-<body>
-
-<div class="glass">
-    <h2 class="text-center mb-3">Admin Dashboard</h2>
-    <p class="text-center">Manage DeepFake Complaints filed by users</p>
-
-    {% if complaints|length == 0 %}
-        <h5 class="text-center mt-4">No Complaints Found</h5>
-    {% else %}
-    <div class="table-responsive">
-        <table class="table text-white align-middle">
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Mobile</th>
-                <th>Description</th>
-                <th>Proof</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for c in complaints %}
-            <tr>
-                <td>{{ c.name }}</td>
-                <td>{{ c.mobile }}</td>
-                <td style="max-width:200px;">{{ c.description }}</td>
-
-                <td>
-                    {% if c.image %}
-                        {% if ".mp4" in c.image or ".avi" in c.image or ".mkv" in c.image %}
-                            <video src="/uploads/{{ c.image }}" onclick="openModal('/uploads/{{ c.image }}','video')" muted></video>
-                        {% else %}
-                            <img src="/uploads/{{ c.image }}" onclick="openModal('/uploads/{{ c.image }}','image')">
-                        {% endif %}
-                    {% else %}
-                        No File
-                    {% endif %}
-                </td>
-
-                <td>
-                    {% if c.status == 'Resolved' %}
-                        <span class="status-badge resolved">Resolved</span>
-                    {% else %}
-                        <span class="status-badge pending">Pending</span>
-                    {% endif %}
-                </td>
-
-                <td>
-                    {% if c.status != 'Resolved' %}
-                        <a href="/resolve/{{ c.id }}" class="btn btn-success btn-sm mb-1">Resolve</a>
-                    {% endif %}
-                    <a href="/delete/{{ c.id }}" class="btn btn-danger btn-sm">Delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
-
-    <div class="text-center mt-3">
-        <a href="/" class="btn btn-light btn-sm">Back to Detection</a>
-        <a href="/logout" class="btn btn-warning btn-sm">Logout</a>
+    <!-- Admin Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+        <div>
+            <div class="forensic-header-tag text-warning"><i class="bi bi-shield-lock-fill me-1"></i> RESTRICTED ACCESS &bull; LEVEL 4 CLEARANCE</div>
+            <h2 class="fw-bold mb-0">Forensic Laboratory Administration & Triage</h2>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <span class="badge bg-dark border border-warning text-warning p-2 font-monospace">
+                <i class="bi bi-database-check me-1"></i> DB: {{ stats.db_type }}
+            </span>
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-forensic-outline text-danger border-danger-subtle">
+                <i class="bi bi-box-arrow-right me-1"></i> Terminate Session
+            </a>
+        </div>
     </div>
 
+    <!-- KPI Telemetry Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="forensic-card p-3 border-info-subtle">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small font-monospace">TOTAL SCANS</div>
+                        <h3 class="fw-bold mb-0 text-light">{{ stats.total_scans }}</h3>
+                    </div>
+                    <div class="fs-2 text-info"><i class="bi bi-activity"></i></div>
+                </div>
+                <div class="mt-2 text-muted small">Aggregate verified media files</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="forensic-card p-3 border-danger-subtle">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small font-monospace">DEEPFAKES FLAGGED</div>
+                        <h3 class="fw-bold mb-0 text-danger">{{ stats.total_fakes }} <span class="fs-6 text-muted">({{ stats.fake_rate }}%)</span></h3>
+                    </div>
+                    <div class="fs-2 text-danger"><i class="bi bi-exclamation-octagon-fill"></i></div>
+                </div>
+                <div class="mt-2 text-muted small">Synthetic anomalies confirmed</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="forensic-card p-3 border-success-subtle">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small font-monospace">AUTHENTIC MEDIA</div>
+                        <h3 class="fw-bold mb-0 text-success">{{ stats.total_reals }}</h3>
+                    </div>
+                    <div class="fs-2 text-success"><i class="bi bi-shield-check"></i></div>
+                </div>
+                <div class="mt-2 text-muted small">Pristine capture integrity</div>
+            </div>
+        </div>
+
+        <!-- [FEATURE COMING SOON] Incident complaints card temporarily disabled for future release
+        <div class="col-md-6 col-lg-3">
+            <div class="forensic-card p-3 border-warning-subtle">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-secondary small font-monospace">INCIDENT COMPLAINTS</div>
+                        <h3 class="fw-bold mb-0 text-warning">{{ stats.pending_complaints }} <span class="fs-6 text-muted">/ {{ stats.total_complaints }}</span></h3>
+                    </div>
+                    <div class="fs-2 text-warning"><i class="bi bi-envelope-exclamation-fill"></i></div>
+                </div>
+                <div class="mt-2 text-muted small">Pending legal review</div>
+            </div>
+        </div>
+        -->
+    </div>
+
+    <!-- Admin Master Tabs -->
+    <div class="forensic-card p-0 overflow-hidden">
+        <div class="p-3 border-bottom border-secondary border-opacity-25 bg-dark bg-opacity-50">
+            <ul class="nav nav-pills nav-pills-forensic mb-0" id="adminTabs" role="tablist">
+                <!-- [FEATURE COMING SOON] Complaints triage tab disabled for future release
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-complaints" data-bs-toggle="pill" data-bs-target="#content-complaints" type="button" role="tab">
+                        <i class="bi bi-shield-exclamation me-1"></i> Complaints Triage ({{ complaints|length }})
+                    </button>
+                </li>
+                -->
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-scans" data-bs-toggle="pill" data-bs-target="#content-scans" type="button" role="tab">
+                        <i class="bi bi-radar me-1"></i> Scans Audit Feed ({{ scans|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-users" data-bs-toggle="pill" data-bs-target="#content-users" type="button" role="tab">
+                        <i class="bi bi-people me-1"></i> Personnel & Users ({{ users|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-telemetry" data-bs-toggle="pill" data-bs-target="#content-telemetry" type="button" role="tab">
+                        <i class="bi bi-cpu me-1"></i> Model & System Telemetry
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content p-3">
+            
+            <!--
+            ========================================================================
+            [FEATURE COMING SOON] TAB 1: COMPLAINTS TRIAGE (To be enabled in future update)
+            ========================================================================
+            <div class="tab-pane fade" id="content-complaints" role="tabpanel">
+                {% if complaints and complaints|length > 0 %}
+                <div class="table-responsive">
+                    <table class="forensic-table">
+                        <thead>
+                            <tr>
+                                <th>Incident ID</th>
+                                <th>Complainant</th>
+                                <th>Contact Mobile</th>
+                                <th>Incident Narrative</th>
+                                <th>Evidence</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in complaints %}
+                            <tr>
+                                <td class="font-monospace text-warning fw-bold">#CMP-{{ '%04d' % c.id }}</td>
+                                <td>
+                                    <div class="fw-bold text-light">{{ c.name }}</div>
+                                    <div class="text-muted small">Age: {{ c.age or 'N/A' }} | {{ c.gender or 'N/A' }}</div>
+                                </td>
+                                <td class="font-monospace text-secondary">{{ c.mobile }}</td>
+                                <td style="max-width: 250px;">
+                                    <div class="text-truncate small text-light" title="{{ c.description }}">
+                                        {{ c.description }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if c.image %}
+                                        <button type="button" class="btn btn-sm btn-forensic-outline" onclick="openEvidenceModal('/uploads/{{ c.image }}', '{{ c.image }}')">
+                                            <i class="bi bi-paperclip me-1"></i> View Proof
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted small">No file</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if c.status == 'Resolved' %}
+                                        <span class="badge bg-success text-white px-2 py-1"><i class="bi bi-check-all me-1"></i>Resolved</span>
+                                    {% elif c.status == 'Under Investigation' %}
+                                        <span class="badge bg-info text-dark px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>Investigating</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-exclamation-circle me-1"></i>Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        {% if c.status != 'Resolved' %}
+                                            <a href="{{ url_for('resolve_complaint', id=c.id) }}" class="btn btn-sm btn-success" title="Mark Resolved">
+                                                <i class="bi bi-check-lg"></i> Resolve
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('delete_complaint_admin', id=c.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Permanently delete complaint record?');" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">No citizen or user complaints logged.</div>
+                {% endif %}
+            </div>
+            ========================================================================
+            -->
+
+            <!-- TAB: SCANS AUDIT FEED (ACTIVE) -->
+            <div class="tab-pane fade show active" id="content-scans" role="tabpanel">
+                {% if scans and scans|length > 0 %}
+                <div class="table-responsive">
+                    <table class="forensic-table">
+                        <thead>
+                            <tr>
+                                <th>Scan ID</th>
+                                <th>Analyst</th>
+                                <th>Original File</th>
+                                <th>Verdict</th>
+                                <th>Confidence</th>
+                                <th>Date</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in scans %}
+                            {% set is_fake = "Fake" in s.verdict or "Deepfake" in s.verdict %}
+                            <tr>
+                                <td class="font-monospace text-info fw-bold">SMDS-DF-{{ '%05d' % s.id }}</td>
+                                <td>
+                                    <div class="text-light small">{{ s.full_name or s.username or 'Anonymous' }}</div>
+                                </td>
+                                <td class="text-light small font-monospace">{{ s.original_name }}</td>
+                                <td>
+                                    <span class="badge-verdict {{ 'badge-fake' if is_fake else 'badge-real' }}" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                                        {{ s.verdict }}
+                                    </span>
+                                </td>
+                                <td class="font-monospace fw-bold {{ 'text-danger' if is_fake else 'text-success' }}">
+                                    {{ s.confidence }}%
+                                </td>
+                                <td class="text-secondary small font-monospace">{{ s.created_at }}</td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('view_result', scan_id=s.id) }}" class="btn btn-sm btn-forensic-outline" title="Inspect">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('download_report', scan_id=s.id) }}" class="btn btn-sm btn-forensic-outline text-info" title="PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">No forensic scans present in database.</div>
+                {% endif %}
+            </div>
+
+            <!-- TAB 3: REGISTERED USERS -->
+            <div class="tab-pane fade" id="content-users" role="tabpanel">
+                {% if users and users|length > 0 %}
+                <div class="table-responsive">
+                    <table class="forensic-table">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Clearance</th>
+                                <th>Total Scans</th>
+                                <th>Registered Date</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td class="font-monospace text-secondary">#USR-{{ '%04d' % u.id }}</td>
+                                <td class="fw-bold text-light">{{ u.username }}</td>
+                                <td>{{ u.full_name or 'N/A' }}</td>
+                                <td class="font-monospace text-secondary">{{ u.email }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-warning text-dark' if u.role == 'admin' else 'bg-dark border border-secondary text-secondary' }}">
+                                        {{ u.role|upper }}
+                                    </span>
+                                </td>
+                                <td class="font-monospace fw-bold text-info">{{ u.scan_count }}</td>
+                                <td class="text-secondary small font-monospace">{{ u.created_at }}</td>
+                                <td class="text-end">
+                                    {% if u.username != 'admin' and u.id != session.get('user_id') %}
+                                    <form action="{{ url_for('delete_user_admin', id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently remove user profile?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-person-x"></i> Delete
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                        <span class="text-muted small">Protected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">No users registered yet.</div>
+                {% endif %}
+            </div>
+
+            <!-- TAB 4: SYSTEM & MODEL TELEMETRY -->
+            <div class="tab-pane fade" id="content-telemetry" role="tabpanel">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="forensic-card p-3">
+                            <span class="forensic-header-tag">INFERENCE ENGINE TELEMETRY</span>
+                            <div class="d-flex flex-column gap-2 mt-3 font-monospace small">
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Core Framework:</span>
+                                    <span class="text-light">PyTorch 2.14.0 + TorchVision 0.29.0</span>
+                                </div>
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Model Architecture:</span>
+                                    <span class="text-light">ResNet-18 Deep Convolutional Network</span>
+                                </div>
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Model Checkpoint:</span>
+                                    <span class="text-info">model/best_resnet.pth (44.8 MB)</span>
+                                </div>
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Explainability Engine:</span>
+                                    <span class="text-success">Grad-CAM (Layer 4 Activation Tensor)</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-secondary">Face Detection Cascade:</span>
+                                    <span class="text-light">OpenCV Haar Cascade + Dynamic ROI Framing</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="forensic-card p-3">
+                            <span class="forensic-header-tag">STORAGE & SYSTEM SECURITY</span>
+                            <div class="d-flex flex-column gap-2 mt-3 font-monospace small">
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Database Backend:</span>
+                                    <span class="text-warning">{{ stats.db_type }} Database</span>
+                                </div>
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Password Security:</span>
+                                    <span class="text-light">PBKDF2-HMAC-SHA256 (Salted)</span>
+                                </div>
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Dossier PDF Engine:</span>
+                                    <span class="text-light">ReportLab 4.4.10</span>
+                                </div>
+                                <div class="d-flex justify-content-between pb-1 border-bottom border-secondary border-opacity-25">
+                                    <span class="text-secondary">Integrity Verification:</span>
+                                    <span class="text-light">SHA-256 Checksumming on upload</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-secondary">Max Media Cap:</span>
+                                    <span class="text-light">25MB (Images) / 50MB (Videos)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
 
-<!-- POPUP MODAL -->
-<div id="viewerModal" class="modal-viewer">
-    <div class="modal-content-box">
-        <span class="close-btn" onclick="closeModal()">X</span>
-        <img id="modalImg" style="display:none;">
-        <video id="modalVideo" controls style="display:none;"></video>
+<!-- EVIDENCE VIEWER MODAL -->
+<div class="modal fade" id="evidenceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content forensic-card border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="modalFileName">Complaint Evidence File</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-3" style="background: #000;">
+                <img id="modalImg" class="img-fluid rounded" style="display:none; max-height:500px;" alt="Evidence">
+                <video id="modalVideo" controls class="img-fluid rounded" style="display:none; max-height:500px;"></video>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
 <script>
-function openModal(fileUrl, type) {
-    const modal = document.getElementById('viewerModal');
+function openEvidenceModal(fileUrl, fileName) {
     const img = document.getElementById('modalImg');
     const vid = document.getElementById('modalVideo');
+    document.getElementById('modalFileName').textContent = fileName;
 
-    if(type === "image") {
-        img.src = fileUrl;
-        img.style.display = "block";
-        vid.style.display = "none";
-    } else {
+    const lower = fileUrl.toLowerCase();
+    if (lower.endsWith('.mp4') || lower.endsWith('.avi') || lower.endsWith('.mov')) {
         vid.src = fileUrl;
-        vid.style.display = "block";
-        img.style.display = "none";
+        vid.style.display = 'block';
+        img.style.display = 'none';
+    } else {
+        img.src = fileUrl;
+        img.style.display = 'block';
+        vid.style.display = 'none';
     }
-
-    modal.style.display = "flex";
+    new bootstrap.Modal(document.getElementById('evidenceModal')).show();
 }
 
-function closeModal() {
-    const modal = document.getElementById('viewerModal');
+document.getElementById('evidenceModal').addEventListener('hidden.bs.modal', function () {
     const vid = document.getElementById('modalVideo');
-    modal.style.display = "none";
     vid.pause();
-}
+    vid.src = '';
+});
 </script>
-
-</body>
-</html>
+{% endblock %}

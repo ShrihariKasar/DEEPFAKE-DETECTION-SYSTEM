@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | Ai Based Synthetic Media Detection System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="forensic-card">
+                <div class="text-center mb-4">
+                    <div class="brand-logo-icon mx-auto mb-2" style="width: 44px; height: 44px; font-size: 1.35rem;">
+                        <i class="bi bi-shield-lock-fill text-white"></i>
+                    </div>
+                    <div class="forensic-header-tag">AUTHENTICATION GATEWAY</div>
+                    <h3 class="fw-bold mb-1">Analyst Portal Sign In</h3>
+                    <p class="text-secondary small">Enter credentials to access digital forensics dossiers</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" class="forensic-input" placeholder="e.g. analyst_01 or admin" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="form-label text-secondary small fw-semibold">Password</label>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-key"></i></span>
+                            <input type="password" name="password" class="forensic-input" placeholder="Enter password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-forensic-primary w-100 justify-content-center py-2 mb-3">
+                        <i class="bi bi-unlock-fill me-1"></i> Authenticate & Enter
+                    </button>
+
+                    <div class="p-2 rounded mb-3 small font-monospace text-secondary" style="background: rgba(14, 165, 233, 0.06); border: 1px solid rgba(14, 165, 233, 0.2);">
+                        <i class="bi bi-info-circle text-info me-1"></i> Default Admin Credentials:
+                        <div class="text-light">User: <b>admin</b> | Pass: <b>admin123</b></div>
+                    </div>
+
+                    <div class="text-center text-secondary small">
+                        Don't have an account yet? 
+                        <a href="{{ url_for('register') }}" class="text-info fw-semibold text-decoration-none">Create Analyst Profile</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

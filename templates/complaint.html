@@ -1,81 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepFake Complaint Form</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% extends "base.html" %}
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #001f3f, #003366, #00509e);
-            min-height:100vh;
-            color:white;
-            font-family:'Segoe UI',sans-serif;
-            padding-top:40px;
-        }
-        .glass {
-            width:600px;
-            background:rgba(255,255,255,0.15);
-            backdrop-filter:blur(8px);
-            border-radius:12px;
-            padding:30px;
-            margin:auto;
-            text-align:center;
-            box-shadow:0 6px 20px rgba(0,0,0,0.2);
-        }
-        .btn-submit {
-            padding:14px;
-            border:none;
-            border-radius:8px;
-            background:#ff0066;
-            color:white;
-            font-weight:600;
-            width:100%;
-            cursor:pointer;
-        }
-        .btn-submit:hover { background:#e60059; }
-    </style>
-</head>
-<body>
+{% block title %}Report Crime (Coming Soon) | Ai Based Synthetic Media Detection System{% endblock %}
 
-<div class="glass">
-    <h3 class="mb-3">Report DeepFake Misuse</h3>
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9 text-center">
+            
+            <div class="forensic-card p-5">
+                <div style="width: 60px; height: 60px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; color: var(--amber-warning); font-size: 1.8rem; margin-bottom: 1.5rem;">
+                    <i class="bi bi-tools"></i>
+                </div>
 
-    <form method="POST" action="/submit_complaint" enctype="multipart/form-data">
+                <div class="forensic-header-tag text-warning">FEATURE SCHEDULED FOR FUTURE RELEASE</div>
+                <h3 class="fw-bold mb-2">Law Enforcement & Cybercrime Escalation Portal</h3>
+                <p class="text-secondary mx-auto mb-4" style="max-width: 520px;">
+                    The direct police reporting and cybercrime escalation module is currently undergoing legal compliance and jurisdiction API integration. This capability will be activated in an upcoming platform release.
+                </p>
 
-        <input name="name" class="form-control mb-3" placeholder="Full Name" required>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('home') }}" class="btn btn-forensic-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Return to Scan Center
+                    </a>
+                </div>
+            </div>
 
-        <input name="age" type="number" class="form-control mb-3" placeholder="Age" required>
+            <!--
+            ========================================================================
+            [CODE COMMENTED OUT - FEATURE TO BE RELEASED AFTERWARDS]
+            The complete complaint filing form implementation is preserved below for reactivation:
+            ========================================================================
 
-        <select name="gender" class="form-control mb-3" required>
-            <option disabled selected>Select Gender</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-        </select>
+            <form method="POST" action="{{ url_for('submit_complaint') }}" enctype="multipart/form-data">
+                {% if linked_scan %}
+                    <input type="hidden" name="scan_id" value="{{ linked_scan.id }}">
+                {% endif %}
 
-        <input name="mobile" class="form-control mb-3" placeholder="Mobile Number" required maxlength="10">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Victim / Complainant Full Name *</label>
+                        <input type="text" name="name" class="forensic-input" placeholder="Legal full name" required>
+                    </div>
 
-        <textarea name="desc" class="form-control mb-3"
-            placeholder="Describe how deepfake was misused..."
-            rows="3" required></textarea>
+                    <div class="col-md-3">
+                        <label class="form-label text-secondary small fw-semibold">Age *</label>
+                        <input type="number" name="age" class="forensic-input" placeholder="Age" min="1" max="120" required>
+                    </div>
 
-        <label class="form-label">Upload Evidence (Image/Video)</label>
-        <input name="file" type="file" class="form-control mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label text-secondary small fw-semibold">Gender *</label>
+                        <select name="gender" class="forensic-input" required>
+                            <option value="" disabled selected>Select</option>
+                            <option value="Female">Female</option>
+                            <option value="Male">Male</option>
+                            <option value="Non-Binary">Non-Binary</option>
+                            <option value="Prefer Not to Disclose">Prefer Not to Disclose</option>
+                        </select>
+                    </div>
 
-        <button class="btn-submit">Submit Complaint</button>
-    </form>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Contact Mobile Number *</label>
+                        <input type="tel" name="mobile" class="forensic-input" placeholder="10-digit mobile number" required pattern="[0-9]{10,15}">
+                    </div>
 
-    {% if message %}
-        <p class="text-success mt-3 fw-bold">{{ message }}</p>
-    {% endif %}
-    {% if error %}
-        <p class="text-danger mt-3 fw-bold">{{ error }}</p>
-    {% endif %}
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Supplementary Evidence File (Optional)</label>
+                        <input type="file" name="file" class="forensic-input" accept="image/*,video/*">
+                    </div>
 
-    <a href="/" class="btn btn-light btn-sm mt-3">Back</a>
+                    <div class="col-12">
+                        <label class="form-label text-secondary small fw-semibold">Incident Narrative & Impact Description *</label>
+                        <textarea name="desc" class="forensic-input" rows="4" placeholder="Describe the incident: where the synthetic media was posted, identity distortion details, suspect handles/platforms, and impact..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    <a href="{{ url_for('home') }}" class="btn btn-forensic-outline">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel / Back
+                    </a>
+                    <button type="submit" class="btn btn-forensic-danger px-4">
+                        <i class="bi bi-send-fill me-1"></i> Submit Official Incident Report
+                    </button>
+                </div>
+            </form>
+            ========================================================================
+            -->
+
+        </div>
+    </div>
 </div>
-
-</body>
-</html>
+{% endblock %}

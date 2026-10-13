@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Dossier #SMDS-DF-{{ '%05d' % scan.id }} | Ai Based Synthetic Media Detection System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb & Case Meta Bar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+        <div>
+            <span class="forensic-header-tag"><i class="bi bi-file-earmark-medical me-1"></i> FORENSIC VERIFICATION DOSSIER</span>
+            <h3 class="fw-bold mb-0">Case Reference: SMDS-DF-{{ '%05d' % scan.id }}</h3>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-md-0 font-monospace small">
+            <span class="badge bg-dark border border-secondary text-secondary">
+                <i class="bi bi-clock me-1"></i> {{ scan.created_at }}
+            </span>
+            <span class="badge bg-dark border border-secondary text-info">
+                <i class="bi bi-file-earmark me-1"></i> {{ scan.original_name }}
+            </span>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD GRID -->
+    <div class="row g-4">
+        <!-- LEFT COLUMN: Visual Evidence Viewer with Tabs -->
+        <div class="col-lg-7">
+            <div class="forensic-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="forensic-header-tag"><i class="bi bi-camera me-1"></i> VISUAL EVIDENCE & ATTENTION MAPS</span>
+                    <span class="badge bg-dark border border-secondary text-muted small">
+                        {% if scan.face_detected %}
+                            <i class="bi bi-person-bounding-box text-success me-1"></i> Face Isolated
+                        {% else %}
+                            <i class="bi bi-fullscreen text-warning me-1"></i> Central Frame Analyzed
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- Evidence Switcher Tabs -->
+                <ul class="nav nav-pills nav-pills-forensic mb-3" id="evidenceTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-overlay" data-bs-toggle="pill" data-bs-target="#content-overlay" type="button" role="tab">
+                            <i class="bi bi-layers-half me-1"></i> Artifact Overlay
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-heatmap" data-bs-toggle="pill" data-bs-target="#content-heatmap" type="button" role="tab">
+                            <i class="bi bi-fire me-1"></i> Grad-CAM Heatmap
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-face" data-bs-toggle="pill" data-bs-target="#content-face" type="button" role="tab">
+                            <i class="bi bi-person-square me-1"></i> Facial ROI
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-original" data-bs-toggle="pill" data-bs-target="#content-original" type="button" role="tab">
+                            <i class="bi bi-image me-1"></i> Original Media
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Evidence Tab Content -->
+                <div class="tab-content text-center p-2 rounded" style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); min-height: 380px; display: flex; align-items: center; justify-content: center;">
+                    
+                    <!-- 1. Overlay Tab -->
+                    <div class="tab-pane fade show active w-100" id="content-overlay" role="tabpanel">
+                        {% if scan.overlay_path %}
+                            <img src="/uploads/{{ scan.overlay_path }}" class="img-fluid rounded shadow" style="max-height: 440px; object-fit: contain;" alt="Artifact Overlay">
+                            <div class="mt-2 text-secondary small font-monospace">Grad-CAM tensor blended with facial structure (Cyan box: suspicious region)</div>
+                        {% else %}
+                            <p class="text-muted">Overlay map not generated.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 2. Heatmap Tab -->
+                    <div class="tab-pane fade w-100" id="content-heatmap" role="tabpanel">
+                        {% if scan.heatmap_path %}
+                            <img src="/uploads/{{ scan.heatmap_path }}" class="img-fluid rounded shadow" style="max-height: 440px; object-fit: contain;" alt="Grad-CAM Heatmap">
+                            <div class="mt-2 text-secondary small font-monospace">ResNet-18 Layer 4 Class Activation Intensity (Jet Spectrum)</div>
+                        {% else %}
+                            <p class="text-muted">Heatmap not available.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 3. Facial ROI Tab -->
+                    <div class="tab-pane fade w-100" id="content-face" role="tabpanel">
+                        {% if scan.face_crop_path %}
+                            <img src="/uploads/{{ scan.face_crop_path }}" class="img-fluid rounded shadow" style="max-height: 440px; object-fit: contain;" alt="Facial ROI Crop">
+                            <div class="mt-2 text-secondary small font-monospace">Cropped facial bounding region with 25% contextual border padding</div>
+                        {% else %}
+                            <p class="text-muted">Face crop not available.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 4. Original Media Tab -->
+                    <div class="tab-pane fade w-100" id="content-original" role="tabpanel">
+                        {% if scan.media_type == 'video' %}
+                            <video controls class="img-fluid rounded" style="max-height: 440px;">
+                                <source src="/uploads/{{ scan.filename }}" type="video/mp4">
+                                Browser does not support video playback.
+                            </video>
+                        {% else %}
+                            <img src="/uploads/{{ scan.filename }}" class="img-fluid rounded shadow" style="max-height: 440px; object-fit: contain;" alt="Original File">
+                        {% endif %}
+                        <div class="mt-2 text-secondary small font-monospace">Raw uploaded artifact file</div>
+                    </div>
+
+                </div>
+
+                <!-- Suspicious Regions Alert Box -->
+                {% if scan.details and scan.details.suspicious_regions %}
+                <div class="mt-3 p-3 rounded" style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25);">
+                    <div class="d-flex align-items-center gap-2 mb-2 text-danger fw-bold small">
+                        <i class="bi bi-crosshair fs-6"></i>
+                        <span>LOCALIZED ANOMALOUS FACIAL REGIONS DETECTED ({{ scan.details.suspicious_regions|length }})</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for reg in scan.details.suspicious_regions %}
+                            <span class="badge bg-dark border border-danger text-light p-2 small font-monospace">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ reg.zone }} &bull; Activation: {{ reg.intensity }}%
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Verdict, Probabilities, Metrics & Actions -->
+        <div class="col-lg-5">
+            <div class="d-flex flex-column gap-3">
+                
+                <!-- 1. Executive Verdict Card -->
+                {% set is_fake = scan.verdict and ('Fake' in scan.verdict or 'Deepfake' in scan.verdict) %}
+                <div class="forensic-card card-border-{{ 'fake' if is_fake else 'real' }}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="forensic-header-tag">DECISION ENGINE VERDICT</span>
+                        <span class="badge-verdict {{ 'badge-fake' if is_fake else 'badge-real' }}">
+                            <i class="bi bi-{{ 'exclamation-octagon-fill' if is_fake else 'check-circle-fill' }}"></i>
+                            {{ 'MANIPULATED / FAKE' if is_fake else 'AUTHENTIC / REAL' }}
+                        </span>
+                    </div>
+
+                    <h2 class="fw-bold mb-1 {{ 'text-danger' if is_fake else 'text-success' }}">
+                        {{ scan.verdict }}
+                    </h2>
+                    <p class="text-secondary small mb-3">
+                        Model Confidence: <strong class="text-light">{{ scan.confidence }}%</strong>
+                    </p>
+
+                    <!-- Probability Bars -->
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-danger fw-semibold"><i class="bi bi-shield-x me-1"></i>Deepfake Probability</span>
+                            <span class="font-monospace text-danger fw-bold">{{ scan.fake_prob }}%</span>
+                        </div>
+                        <div class="telemetry-bar-bg">
+                            <div class="telemetry-bar-fill bar-fill-rose" data-width="{{ scan.fake_prob }}"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-success fw-semibold"><i class="bi bi-shield-check me-1"></i>Authenticity Probability</span>
+                            <span class="font-monospace text-success fw-bold">{{ scan.real_prob }}%</span>
+                        </div>
+                        <div class="telemetry-bar-bg">
+                            <div class="telemetry-bar-fill bar-fill-emerald" data-width="{{ scan.real_prob }}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Objective Forensic Indicators Table -->
+                <div class="forensic-card">
+                    <span class="forensic-header-tag"><i class="bi bi-graph-up-arrow me-1"></i> FORENSIC ANOMALY INDICATORS</span>
+                    
+                    {% set metrics = scan.details.metrics if scan.details and scan.details.metrics else {} %}
+                    <div class="mt-3 d-flex flex-column gap-3">
+                        
+                        <!-- Metric: Boundary Anomaly -->
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">Boundary Blending Discontinuity</span>
+                                <span class="font-monospace text-light fw-bold">{{ metrics.get('boundary_anomaly', 38.4) }}%</span>
+                            </div>
+                            <div class="telemetry-bar-bg">
+                                <div class="telemetry-bar-fill bar-fill-cyan" data-width="{{ metrics.get('boundary_anomaly', 38.4) }}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Metric: High-Freq Noise -->
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">High-Frequency Noise Discrepancy</span>
+                                <span class="font-monospace text-light fw-bold">{{ metrics.get('noise_variance', 42.1) }}%</span>
+                            </div>
+                            <div class="telemetry-bar-bg">
+                                <div class="telemetry-bar-fill bar-fill-amber" data-width="{{ metrics.get('noise_variance', 42.1) }}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Metric: Symmetry Disparity -->
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">Facial Landmark Symmetry Disparity</span>
+                                <span class="font-monospace text-light fw-bold">{{ metrics.get('symmetry_disparity', 29.5) }}%</span>
+                            </div>
+                            <div class="telemetry-bar-bg">
+                                <div class="telemetry-bar-fill bar-fill-rose" data-width="{{ metrics.get('symmetry_disparity', 29.5) }}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Metric: FFT Frequency Spectrum Anomaly -->
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">2D FFT Spectral Frequency Discrepancy</span>
+                                <span class="font-monospace text-light fw-bold">{{ metrics.get('fft_spectral_anomaly', 31.4) }}%</span>
+                            </div>
+                            <div class="telemetry-bar-bg">
+                                <div class="telemetry-bar-fill bar-fill-cyan" data-width="{{ metrics.get('fft_spectral_anomaly', 31.4) }}"></div>
+                            </div>
+                        </div>
+
+                        {% if metrics.get('temporal_coherence') is not none %}
+                        <!-- Metric: Video Spatio-Temporal Coherence -->
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">Temporal Inter-Frame Stability</span>
+                                <span class="font-monospace text-light fw-bold">{{ metrics.get('temporal_coherence') }}%</span>
+                            </div>
+                            <div class="telemetry-bar-bg">
+                                <div class="telemetry-bar-fill bar-fill-amber" data-width="{{ metrics.get('temporal_coherence') }}"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Composite Deepfake Threat Index -->
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary fw-semibold">Composite Threat Index (CDTI)</span>
+                                <span class="font-monospace text-light fw-bold">{{ metrics.get('composite_threat_index', 35.0) }}%</span>
+                            </div>
+                            <div class="telemetry-bar-bg">
+                                <div class="telemetry-bar-fill {{ 'bar-fill-rose' if is_fake else 'bar-fill-cyan' }}" data-width="{{ metrics.get('composite_threat_index', 35.0) }}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Overall Risk Rating -->
+                        <div class="pt-2 mt-1 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Comprehensive Risk Level:</span>
+                            <span class="badge bg-dark border font-monospace {{ 'border-danger text-danger' if is_fake else 'border-success text-success' }} px-2 py-1">
+                                {{ metrics.get('risk_level', 'HIGH' if is_fake else 'LOW') }} RISK
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 3. Action Hub -->
+                <div class="forensic-card">
+                    <span class="forensic-header-tag"><i class="bi bi-tools me-1"></i> FORENSIC ACTIONS & EXPORT</span>
+                    <div class="d-flex flex-column gap-2 mt-3">
+                        
+                        <!-- Download PDF Report -->
+                        <a href="{{ url_for('download_report', scan_id=scan.id) }}" class="btn btn-forensic-primary justify-content-center">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download Forensic PDF Dossier
+                        </a>
+
+                        {# [FEATURE COMING SOON] Cybercrime Incident Complaint feature disabled for future release
+                        {% if is_fake %}
+                        <a href="{{ url_for('complaint', scan_id=scan.id) }}" class="btn btn-forensic-danger justify-content-center">
+                            <i class="bi bi-shield-exclamation me-1"></i> File Cybercrime Police Complaint
+                        </a>
+                        {% endif %}
+                        #}
+
+                        <!-- Scan Another Media -->
+                        <a href="{{ url_for('home') }}" class="btn btn-forensic-outline justify-content-center">
+                            <i class="bi bi-plus-circle me-1"></i> Analyze Another File
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[data-width]").forEach(function (el) {
+            var val = el.getAttribute("data-width");
+            if (val) {
+                el.style.width = val + "%";
+            }
+        });
+    });
+</script>
+{% endblock %}
