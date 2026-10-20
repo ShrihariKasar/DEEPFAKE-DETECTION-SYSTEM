@@ -16,6 +16,7 @@
     
     <!-- Custom Cyber-Forensics Design System -->
     <link href="{{ url_for('static', filename='css/forensics.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/chatbot.css') }}" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -122,6 +123,96 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ========================================== -->
+    <!-- DEEPGUARD AI FORENSIC ASSISTANT CHATBOT -->
+    <!-- ========================================== -->
+
+    <!-- Floating Chat Trigger Button -->
+    <div id="deepguard-chat-trigger" class="deepguard-chat-trigger" title="Ask DeepGuard Forensic Assistant">
+        <div class="trigger-avatar">
+            <i class="bi bi-robot"></i>
+            <span class="trigger-badge-pulse"></span>
+        </div>
+        <div class="trigger-text-wrap">
+            <span class="trigger-title">DeepGuard AI</span>
+            <span class="trigger-subtitle">SYSTEM GUIDE</span>
+        </div>
+    </div>
+
+    <!-- Chatbot Main Modal Widget -->
+    <div id="deepguard-chat-widget" class="deepguard-chat-widget" role="dialog" aria-label="DeepGuard AI Assistant">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="chat-header-identity">
+                <div class="chat-header-avatar">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <div class="chat-header-text">
+                    <h6>
+                        <span>DeepGuard AI Assistant</span>
+                    </h6>
+                    <div class="chat-status-pill">
+                        <span class="chat-status-dot"></span>
+                        <span>ONLINE &bull; RESNET-18 EXPERT</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-header-actions">
+                <button type="button" class="chat-tool-btn" id="btn-clear-chat" title="Clear Conversation">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+                <button type="button" class="chat-tool-btn" id="btn-minimize-chat" title="Minimize">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+                <button type="button" class="chat-tool-btn" id="btn-expand-chat" title="Expand / Restore">
+                    <i class="bi bi-arrows-angle-expand"></i>
+                </button>
+                <button type="button" class="chat-tool-btn btn-close-chat" id="btn-close-chat" title="Close Chat">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Body Messages -->
+        <div class="chat-body" id="chat-body-messages">
+            <!-- Messages populated dynamically via JavaScript -->
+        </div>
+
+        <!-- Typing Indicator (Hidden by default) -->
+        <div class="chat-message-row bot-row typing-indicator-row" id="chat-typing-indicator">
+            <div class="message-avatar bot-avatar-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="typing-dots-bubble">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+        </div>
+
+        <!-- Quick Action Prompt Suggestions -->
+        <div class="chat-suggestions-wrapper" id="chat-suggestions-container">
+            <!-- Chips rendered dynamically -->
+        </div>
+
+        <!-- Chat Footer & Input Form -->
+        <div class="chat-footer">
+            <form id="chat-input-form" class="chat-input-form" autocomplete="off">
+                <input type="text" id="chat-input-field" class="chat-input-field" placeholder="Ask anything about this system (e.g., how to register, how scan works)..." required />
+                <button type="submit" id="chat-send-btn" class="chat-send-btn" title="Send Question">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+            <div class="chat-quick-hint">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Interactive Guide &bull; From Registration to Forensic Dossiers
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Controller Script -->
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

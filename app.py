@@ -20,7 +20,7 @@ import uuid
 import shutil
 from flask import (
     Flask, request, render_template, send_from_directory, redirect,
-    url_for, session, flash, abort
+    url_for, session, flash, abort, jsonify
 )
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -29,6 +29,7 @@ import db
 from core.auth import login_required, admin_required, validate_registration
 from core.detector import DeepfakeDetector
 from core.report_gen import generate_pdf_report
+from core.chatbot import chatbot_engine
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -424,6 +425,29 @@ def delete_user_admin(id):
     db.delete_user(id)
     flash(f"User #{id} account removed.", "info")
     return redirect(url_for('admin_panel'))
+
+
+# -------------------------------------------------------------------
+# FORENSIC AI ASSISTANT CHATBOT API
+# -------------------------------------------------------------------
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    try:
+        data = request.get_json(silent=True) or {}
+        message = data.get('message', '').strip()
+        history = data.get('history', [])
+        response = chatbot_engine.process_message(message, history)
+        return jsonify({
+            'status': 'success',
+            'reply': response['reply'],
+            'suggestions': response['suggestions']
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'reply': f"An error occurred while consulting the DeepGuard AI Assistant: {str(e)}",
+            'suggestions': chatbot_engine.default_suggestions
+        }), 500
 
 
 # -------------------------------------------------------------------

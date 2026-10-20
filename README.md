@@ -59,6 +59,7 @@ Unlike black-box classifiers that output a raw score with no transparency, AI De
 - **🔄 Resilient Dual-Engine Database**: Connects directly to **MySQL**, with automatic zero-configuration failover to a local **SQLite** database (`deepfake_local.db`) if MySQL is unavailable.
 - **🛡️ Role-Based Access Control (RBAC)**: Secure authentication system with salt-hardened PBKDF2:SHA256 password hashing separating public analysts and system administrators.
 - **📊 Interactive Forensic Dashboard**: Real-time confidence dials, probability matrices (Real vs. Fake), quick-action sample benchmark testing, and historical audit trails.
+- **🤖 Interactive Forensic AI Chatbot**: Built-in intelligent conversational assistant explaining the end-to-end pipeline from account registration to final cryptographic dossier generation, with interactive prompt chips and session memory.
 - **👮 Incident Complaint & Escalation Pipeline**: Integrated cybercrime reporting module allowing victims and analysts to compile evidence dossiers for law enforcement triage.
 
 ---
@@ -124,6 +125,7 @@ flowchart TD
 | **10** | **Dual Database Persistence** | `db.py` | Enterprise MySQL with automated, zero-config SQLite failover. |
 | **11** | **Administration & Triage Suite** | `templates/admin_panel.html` | User account lifecycle, scan surveillance, and system statistics. |
 | **12** | **Security & Parameter Sanitization** | `core/auth.py`, `app.py` | CSRF guard, SQL injection protection, route decorators (`@admin_required`). |
+| **13** | **Forensic AI Chatbot Guide** | `core/chatbot.py`, `static/js/chatbot.js` | Interactive end-to-end system tutor explaining registration to PDF dossier generation. |
 
 ---
 
@@ -369,6 +371,11 @@ To run with an enterprise MySQL instance:
   - Cryptographic **SHA-256 Hash** for chain of custody
   - Side-by-side visual exhibits (Original vs. Extracted Face vs. Grad-CAM Overlay)
   - Quantitative anomaly tables and expert summary
+
+### 5. Using the DeepGuard AI Assistant Chatbot
+- Click the glowing **DeepGuard AI** floating launcher in the bottom right corner of any page.
+- Choose from preset quick prompt chips (e.g. *🚀 Full System Walkthrough*, *👤 Registration & Login*, *🔬 Media Scanning*, *🧠 ResNet-18 & Grad-CAM*, *📄 PDF Dossier*, *🛡️ Admin Panel*).
+- Ask any freeform questions in natural language to receive detailed step-by-step guidance, code breakdowns, and direct navigation links.
 
 ---
 
